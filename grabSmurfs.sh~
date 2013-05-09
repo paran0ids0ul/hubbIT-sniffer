@@ -11,7 +11,7 @@
 # 	1. How long to run the script for
 
 # -- Change this to your interface --
-IFACE="wlan0"
+IFACE="wlp2s0"
 # -----------------------------------
 
 # Set variables
@@ -30,10 +30,10 @@ if [ "$(ifconfig | grep -o $MON)" != "$MON" ]; then
 fi
 
 # Generate data
-(/bin/sleep $RUNTIME && /usr/bin/killall airodump-ng) &
+(/usr/bin/sleep $RUNTIME && /usr/bin/killall airodump-ng) &
 /usr/sbin/airodump-ng --output-format csv mon0 -w out
 
 # Clean output
-/bin/sed -i "1,/$STRING/d" out-01.csv
+/usr/bin/sed -i "1,/$STRING/d" out-01.csv
 /usr/bin/cut -f1 -d"," out-01.csv > out.csv
-/bin/rm out-01.csv
+/usr/bin/rm out-01.csv
