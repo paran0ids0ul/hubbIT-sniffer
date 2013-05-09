@@ -1,1 +1,16 @@
 *.json
+*.csv
+### /home/rekoil/.gitignore-boilerplates/Dart.gitignore
+
+.DS_Store
+packages
+.project
+pubspec.lock
+
+
+### /home/rekoil/.gitignore-boilerplates/Global/SublimeText.gitignore
+
+# SublimeText project files
+*.sublime-workspace
+
+
