@@ -18,15 +18,30 @@ main() {
     server.listen((HttpRequest request) {
       var get;
       try{
-        var get=parse(request.queryParameters.toString());
+        get=parse(request.queryParameters.toString());
+        //print(get);
+        
       } catch(e) {                          // No specified type, handles all
         print('error pars');
 
         request.response.write("error json");
         request.response.write(request.queryParameters.toString());
+       // request.response.close();
       }
-      print(get);
+      if(get==null){
+        print(get);
+        request.response.write("get eamty");
+        request.response.close();
+        return;
+      }
+      print("here?");
+      //print(get);
       String site=get['site'];
+      if(site==null){
+        request.response.write("site inte satt");
+        request.response.close();
+        return;
+      }
       String json=get['json'];
       
       if(site==null){
@@ -44,8 +59,14 @@ main() {
         case 'addMacAddress':
           addMacAddress(json,request);
           break;
+        case 'getAllMyMacs':
+          getAllMyMacs(json,request);
+          break;
+        case 'getSmurrfInTheHubb':
+          getSmurrfInTheHubb(json,request);
+          break;
         default:
-          
+          request.response.write("felaktig site satt"); 
       }
      
       
@@ -117,5 +138,48 @@ void addMacAddress(json,request){
   
 }
 
-
-
+void getAllMyMacs(json,request){
+  print("get all my macs not rdy yet");
+  var pool =getPool();
+  String stringReturn="";
+  var list = new List();
+  pool.query('select cid as cid,points as point from macadresses ORDER BY points DESC').then((result) {
+    // request.response.write('Hello, world');
+ //   return returnString="";
+    for (var row in result) {
+      //request.response.write("<br />");
+      String cid=row[0];
+      String point=row[1];
+      //print("{$cid,$point}");
+      var user = {
+       'cid' : cid,
+       'point' : point
+      };
+      list.add(user);
+      
+      request.response.write(stringify(user));
+      
+      //request.response.write(stringify(list));
+    }
+    request.response.close();
+  });
+}
+void getSmurrfInTheHubb(json,request){
+  print("get all the smurrf in the hubb");
+  var pool =getPool();
+  String stringReturn="";
+  var list = new List();
+  pool.query('SELECT * FROM `macadresses` WHERE `timeInHubben`!=0').then((result) {
+    for (var row in result) {
+      String cid=row[0];
+      String point=row[1];
+      var user = {
+            'cid' : cid
+      };
+      list.add(user);
+     // request.response.write(stringify(user));
+    }
+    request.response.write(list);
+    request.response.close();
+  });
+}
