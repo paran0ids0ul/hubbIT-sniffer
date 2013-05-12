@@ -1,0 +1,12 @@
+---
+build.dart --machine --full
+[{"method":"mapping","params":{"from":"web/whoisinthehub.html","to":"web/out/whoisinthehub.html"}}]
+Total time spent on web/whoisinthehub.html                   -- 348 ms
+Total time                                                   -- 377 ms
+build.dart finished [862 ms]
+
+---
+build.dart --machine --changed=web/out/whoisinthehub.css --changed=web/out/whoisinthehub.dart --changed=web/out...
+Total time                                                   --  37 ms
+build.dart finished [687 ms]
+
