@@ -25,11 +25,11 @@ fi
 AIRMON="/usr/sbin/airmon-ng"
 AIRDUMP="/usr/sbin/airodump-ng"
 
-SLEEP="/usr/bin/sleep"
+SLEEP="/bin/sleep"
 KILLALL="/usr/bin/killall"
-SED="/usr/bin/sed"
+SED="/bin/sed"
 CUT="/usr/bin/cut"
-RM="/usr/bin/rm"
+RM="/bin/rm"
 WGET="/usr/bin/wget"
 
 # Set variables
@@ -61,13 +61,16 @@ JSON="$(echo -e "{\"mac\":[")"
 while read -r line; do
 	JSON+="$(echo -e "\"$line\",")"
 done < out.txt
-JSON+="$(echo -e "\b]}")"
+JSON+="$(echo -e '\b]}')"
 
 # Prints out JSON
 # echo -e $JSON > out.json
 
 # Sends JSON via wget
-# echo $WGET "$2?\"site\"=\"addMacs\"\&\"json\"=$JSON"
+#echo $WGET "\"http://$2?\'site\'=\'addMacs\'&\'json\'=$JSON\""
+addr="http://$2?\"site\"=\"addMacs\"&\"json\"=$JSON"
+
+$WGET $addr
 
 # Clean up
 $RM out-01.csv
