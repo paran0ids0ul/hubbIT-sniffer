@@ -7,7 +7,7 @@ ConnectionPool pool;
 
 ConnectionPool getPool(){
   if(pool==null)
-    pool = new ConnectionPool(user:"root", password:"monraket", port:3306, db:"whoIsInTheHubb", host:"localhost");
+    pool = new ConnectionPool(user:"root", password:"lolboll", port:3306, db:"wiith", host:"localhost");
   return pool;
 }
 

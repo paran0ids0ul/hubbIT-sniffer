@@ -7,6 +7,7 @@
         <div>
           <button on-click="increment()">Click me</button><br />
           <span>(click count: {{count}})</span>
+          <template iterate="smurf in smurfs"> {{smurf}} </template>
         </div>
       </template>
       <script type="application/dart" src="xclickcounter.dart"></script>

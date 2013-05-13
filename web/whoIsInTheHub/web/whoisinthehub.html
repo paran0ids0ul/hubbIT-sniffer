@@ -8,6 +8,8 @@
     
     <!-- import the click-counter -->
     <link rel="import" href="xclickcounter.html">
+    <link rel="import" href="activeSmurfs.html">
+    
   </head>
   <body>
     <h1>WhoIsInTheHub</h1>
@@ -15,7 +17,9 @@
     <p>Hello world from Dart!</p>
     
     <div id="sample_container_id">
-      <div is="x-click-counter" id="click_counter" count="{{startingCount}}"></div>
+     <!-- <div is="x-click-counter" id="click_counter" count="{{startingCount}}"></div> -->
+      <div is="activeSmurfs" id="active_smurf" ></div>
+       <button id="button1">Button 1</button>
     </div>
 
     <script type="application/dart" src="whoisinthehub.dart"></script>
