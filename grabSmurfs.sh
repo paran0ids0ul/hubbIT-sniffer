@@ -61,7 +61,9 @@ JSON="$(echo -e "{\"mac\":[")"
 while read -r line; do
 	JSON+="$(echo -e "\"$line\",")"
 done < out.txt
-JSON+="$(echo -e '\b]}')"
+
+JSON="${JSON:0:${#JSON}-1}]}"
+#JSON+="$(echo -e '\b]}')"
 
 # Prints out JSON
 # echo -e $JSON > out.json
