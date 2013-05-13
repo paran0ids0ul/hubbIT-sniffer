@@ -1,32 +1,32 @@
 import 'package:sqljocky/sqljocky.dart';
 import 'package:sqljocky/utils.dart';
 import 'dart:io';
+import 'dart:uri';
 import 'dart:json';
 
 ConnectionPool pool;
 
 ConnectionPool getPool(){
   if(pool==null)
-    pool = new ConnectionPool(user:"root", password:"lolboll", port:3306, db:"wiith", host:"localhost");
+    pool = new ConnectionPool(user:"root", password:"monraket", port:3306, db:"whoIsInTheHubb", host:"localhost");
   return pool;
 }
 
 
 main() {
   print("starting server");
-  HttpServer.bind('129.16.186.148', 8080).then((server) {
+  HttpServer.bind('129.16.180.213', 8080).then((server) {
     server.listen((HttpRequest request) {
       var get;
+      String string2=request.queryParameters.toString();
       try{
-        get=parse(request.queryParameters.toString());
-        //print(get);
-        
-      } catch(e) {                          // No specified type, handles all
-        print('error pars');
+        get=parse(string2);   
+      } catch(e) {          
+        print('error pars: $e');// No specified type, handles all
+        print(request.queryParameters.toString());
 
         request.response.write("error json");
         request.response.write(request.queryParameters.toString());
-       // request.response.close();
       }
       if(get==null){
         print(get);
@@ -54,12 +54,13 @@ main() {
           addMacs(json,request);
           break;
         case 'topList':
-          TopList(json,request);
+          topList(json,request);
           break;
         case 'addMacAddress':
           addMacAddress(json,request);
           break;
         case 'getAllMyMacs':
+          //http://129.16.180.213:8080/?%22site%22=%22getAllMyMacs%22&%22json%22={%22cid%22:%22erikax%22}
           getAllMyMacs(json,request);
           break;
         case 'getSmurrfInTheHubb':
@@ -88,7 +89,7 @@ void addMacs(json,request){
   request.response.write("macs added");
   request.response.close();
 }
-void TopList(json,request){
+void topList(json,request){
   print("printing toplist");
   var pool =getPool();
   String stringReturn="";
@@ -97,14 +98,8 @@ void TopList(json,request){
     // request.response.write('Hello, world');
  //   return returnString="";
     for (var row in result) {
-      for (String col in row) {
-        //request.response.write(col);
-      }
-      
-      //request.response.write("<br />");
       String cid=row[0];
       String point=row[1];
-      //print("{$cid,$point}");
       var user = {
        'cid' : cid,
        'point' : point
@@ -112,21 +107,15 @@ void TopList(json,request){
       list.add(user);
       
       request.response.write(stringify(user));
-      
-      //request.response.write(stringify(list));
     }
-   // request.response.write(stringify(list));
-   // request.response.write(stringify(result));
     request.response.close();
   });
     
 }
+//http://129.16.180.213:8080/?%22site%22=%22addMacAddress%22&%22json%22={%22mac%22:[%2200:21:63:b5:1f:ff%22]}
 void addMacAddress(json,request){
   var pool =getPool();
-  //print(json);
-  //print(json['mac']);
   for (String mac in json['mac']) {
-   // print(s);
     pool.query('insert INTO macs (mac) VALUES ("$mac")').then((result) {
       print(mac);
     }).catchError((onError){
@@ -140,29 +129,30 @@ void addMacAddress(json,request){
 
 void getAllMyMacs(json,request){
   print("get all my macs not rdy yet");
+  if(json['cid']==null){
+    request.response.write("error nead to give cid");
+    request.response.close();
+    return;
+  }
   var pool =getPool();
+  String cid=json['cid'];
   String stringReturn="";
   var list = new List();
-  pool.query('select cid as cid,points as point from macadresses ORDER BY points DESC').then((result) {
-    // request.response.write('Hello, world');
- //   return returnString="";
+  String query='select mac from macToCid WHERE `cid`="$cid"';
+  print("query: $query");
+  pool.query(query).then((result) {
     for (var row in result) {
-      //request.response.write("<br />");
-      String cid=row[0];
-      String point=row[1];
-      //print("{$cid,$point}");
-      var user = {
-       'cid' : cid,
-       'point' : point
-      };
-      list.add(user);
-      
-      request.response.write(stringify(user));
-      
-      //request.response.write(stringify(list));
+      print("row $row");
+      String mac=row[0]; 
+     // print("mac $mac");
+      list.add(mac);
     }
+    print(stringify(list));
+    request.response.write(list);
     request.response.close();
   });
+  
+
 }
 void getSmurrfInTheHubb(json,request){
   print("get all the smurrf in the hubb");
@@ -176,8 +166,7 @@ void getSmurrfInTheHubb(json,request){
       var user = {
             'cid' : cid
       };
-      list.add(user);
-     // request.response.write(stringify(user));
+      list.add(stringify(user));
     }
     request.response.write(list);
     request.response.close();
