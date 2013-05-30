@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+
+<html> 
+  <body>   
+    <element name="myMacs" constructor="myMacs" extends="div">
+      <template>
+        <div>
+          cid: <input type="text" bind-value="cid" placeholder="erikax">
+         <template iterate="mac in macs"> {{mac}}<br /> </template>
+        </div>
+      </template>
+      <script type="application/dart" src="myMacs.dart"></script>
+    </element>
+   
+  </body>
+</html>

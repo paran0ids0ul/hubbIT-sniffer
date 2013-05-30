@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+
+<html> 
+  <body>   
+    <element name="registerMacs" constructor="registerMacs" extends="div">
+      <template>
+        <div>
+          cid: <input type="text" bind-value="cid" placeholder="erikax">
+          mac: <input type="text" bind-value="mac" placeholder="74:f0:6d:81:5f:cc">
+          
+          <button on-click="makeRequest()">add</button><br />
+          </div>
+      </template>
+      <script type="application/dart" src="registerMacs.dart"></script>
+    </element>
+   
+  </body>
+</html>
