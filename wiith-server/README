@@ -1,10 +1,12 @@
 How to use:
 1. Install golang
 2. $ source setup-env.sh
-3. Edit the code (optional)
-4. $ cd src/hubben.chalmers.it/wiith/
-5. $ go install
-6. Finally, start with: $ wiith
-7. ...
-8. PROFIT
+   (Let's fetch the dependencies)
+3. $ go get github.com/golang/glog
+4. Edit the code (optional)
+5. $ cd src/hubben.chalmers.it/wiith/
+6. $ go install
+7. $ sudo wiith
+8. ...
+9. PROFIT
 
