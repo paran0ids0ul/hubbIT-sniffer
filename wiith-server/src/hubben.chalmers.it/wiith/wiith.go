@@ -7,6 +7,11 @@ import (
     "os/user"
 )
 
+const (
+    // The interface to monitor
+    iface = "wlan0"
+)
+
 func main() {
     // Logging options
     flag.Set("logtostderr", "false")
@@ -21,7 +26,12 @@ func main() {
 
     glog.Info("Starting whoIsInTheHubb server")
     defer glog.Info("Stopping whoIsInTheHubb server")
-    start()
+    err := SetupMonitor(iface)
+    if err != nil {
+        glog.Error(err.Error())
+    }
+    defer TeardownMonitor("mon0")
+    StartAirdump()
 }
 
 // returns true if run with root priviliges, else false.

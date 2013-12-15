@@ -5,8 +5,12 @@ import (
     "fmt"
     "github.com/golang/glog"
     "io"
+    "net"
     "os"
     "os/exec"
+    "os/signal"
+    //"regexp"
+    "syscall"
 )
 
 type MAC string
@@ -16,40 +20,31 @@ var (
         "--berlin", "20", "mon0"}
     airodumpCmd = "airodump-ng"
     cmd         *exec.Cmd
-    stdoutPipe  io.ReadCloser
+    output      io.ReadCloser
 )
 
-func init() {
-
-}
-
 // Start the airodump-ng process
-func start() (err error) {
+func StartAirdump() (err error) {
     glog.Info("Starting airodump-ng")
 
     cmd = exec.Command(airodumpCmd, airodumpArgs...)
-    // airdump does not seem to use stdout and uses stderr for everything
-    stdoutPipe, err = cmd.StderrPipe()
+    // airdump doesn't seem to use stdout and seem to use stderr for everything
+    output, err = cmd.StderrPipe()
     if err != nil {
         glog.Error(err.Error())
         return err
     }
 
+    go signalListen()
     err = cmd.Start()
     if err != nil {
         glog.Error(err.Error())
         return err
     }
 
-    scanner := bufio.NewScanner(stdoutPipe)
-    for scanner.Scan() {
-        fmt.Println(scanner.Text())
-    }
+    process(nil)
 
-    if err := scanner.Err(); err != nil {
-        glog.Error(err.Error())
-    }
-
+    // Seem to need to flush output buffer before exit...
     err = cmd.Wait()
     if err != nil {
         glog.Error(airodumpCmd + ": " + err.Error())
@@ -58,34 +53,62 @@ func start() (err error) {
     return err
 }
 
-func stop() error {
+// Sends SIGINT to airodump-ng. Does not wait for process to end
+func StopAirdump() {
     if cmd != nil {
-        cmd.Process.Signal(os.Interrupt)
-        err := cmd.Wait()
-        if err != nil {
-            return err
-        }
+        cmd.Process.Signal(syscall.SIGTERM)
+        // TODO: Maybe flush output and wait for exit
     }
-    return nil
-}
-
-func readAll(io.ReadCloser) (out string) {
-    scanner := bufio.NewScanner(stdoutPipe)
-    for scanner.Scan() {
-        out += scanner.Text()
-    }
-
-    if err := scanner.Err(); err != nil {
-        glog.Error(err.Error())
-    }
-    return out
 }
 
 // Process and parse the output from airodump-ng
-// Returns the current visible clients (mac-addresses)
-func process() []MAC {
-    var clients []MAC
-    clients = make([]MAC, 0, 100)
+// Returns the current visible clients (mac-addresses) on the supplied channel
+func process(macChan chan MAC) {
+    //var re = regexp.MustCompile(`^([0-9A-F]{2}[:]){5}([0-9A-F]{2})$`)
+    reader := bufio.NewReader(output)
+    for {
+        line, err := reader.ReadString('\n')
+        fmt.Println(line)
+        if err != nil {
+            if err != io.EOF {
+                glog.Error(err.Error())
+            }
+            return
+        }
+        // FIXME
+        //fmt.Print(re.FindString(line))
+    }
+}
 
-    return clients
+// Turn on monitor mode on the supplied iface
+func SetupMonitor(iface string) error {
+    // Check if we actually need to enable monitor mode
+    mon, _ := net.InterfaceByName("mon0")
+    if mon != nil {
+        glog.Info("Monitor interace already enabled")
+        return nil
+    }
+
+    glog.Info("Enabling monitor mode")
+    return execAirmon("start", iface)
+}
+
+// Disable the monitor mode. Note: should be pased mon0 for example
+// instead of wlan0
+func TeardownMonitor(iface string) error {
+    glog.Info("Disabling monitor mode")
+    return execAirmon("stop", iface)
+}
+
+// Helper function
+func execAirmon(method, iface string) error {
+    c := exec.Command("airmon-ng", method, iface)
+    return c.Run()
+}
+
+func signalListen() {
+    // Handle SIGINT and SIGTERM.
+    ch := make(chan os.Signal)
+    signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
+    glog.Warning("Caught signal: ", <-ch)
 }
