@@ -6,7 +6,8 @@ How to use:
 4. Edit the code (optional)
 5. $ cd src/hubben.chalmers.it/wiith/
 6. $ go install
-7. $ sudo wiith
-8. ...
-9. PROFIT
+7. $ wiith --help
+8. $ screen -S wiith -U wiith
+9. ...
+10. PROFIT
 
