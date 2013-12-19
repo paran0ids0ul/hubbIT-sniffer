@@ -11,7 +11,8 @@ import (
 
 const (
     // The interface to monitor
-    iface = "wlan0"
+    // TODO: Replace with flag
+    iface = "mon0"
 )
 
 var allKnown = make(map[MAC]User)
@@ -38,18 +39,19 @@ type Client struct {
 }
 
 var (
-    clients = make(map[MAC]*Client)
+    currClients = make(map[MAC]*Client)
 )
 
 func main() {
     // Logging options
+    // TODO: Replace with flags
     flag.Set("logtostderr", "true")
     flag.Set("log_dir", "./logs")
     flag.Set("stderrthreshold", "INFO")
     defer glog.Flush()
 
-    if !InterfaceExists("mon0") {
-        glog.Error("mon0 interface does not exist")
+    if !InterfaceExists(iface) {
+        glog.Error(iface + " interface does not exist")
         os.Exit(1)
     }
 
@@ -58,51 +60,57 @@ func main() {
     }
 
     glog.Info("Starting whoIsInTheHubb server")
-    defer glog.Info("Stopping whoIsInTheHubb server")
+    defer glog.Info("Shutting down whoIsInTheHubb server...")
     defer StopTshark()
 
     capchan := make(chan CapturedFrame)
     errchan := make(chan error)
+    // TODO: Handle SIGUSR1, SIGUSR2, flush current and print current clients
 
     go func() {
         errchan <- StartTshark(DisplayFilter, capchan)
     }()
 
+    go listenForClients(capchan)
+    err := <-errchan // Wait for exit...
+    if err == nil {
+        glog.Info("tshark exited successfully")
+        printClients()
+    }
+}
+
+func listenForClients(capchan chan CapturedFrame) {
     for frame := range capchan {
-        if c, ok := clients[frame.Mac]; !ok {
+        if c, ok := currClients[frame.Mac]; !ok {
             client := &Client{nil, frame.Timestamp, frame.Timestamp}
             if user, isKnown := allKnown[frame.Mac]; isKnown {
                 client.User = &user
             }
-            clients[frame.Mac] = client
-            //if client.User != nil {
-            //fmt.Println("Saw", client.User.Name, "("+client.User.Desc+")", "first", client.FirstSeen.Format(time.Kitchen), "and last", client.LastSeen.Format(time.Kitchen), "Mac:", frame.Mac)
-            //} else {
-            //fmt.Println("Saw", frame.Mac)
-            //}
+            currClients[frame.Mac] = client
         } else {
             // You seem familiar... Update LastSeen
-            c.LastSeen = time.Now()
+            c.LastSeen = frame.Timestamp
         }
-
     }
-    printClients()
-
 }
 
 func printClients() {
     var count int
-    for mac, c := range clients {
+    var first, second string
+    for mac, c := range currClients {
         count++
-        user := c.User
-        if user != nil {
-            fmt.Println("Saw", c.User.Name, "("+c.User.Desc+")", "first", c.FirstSeen.Format(time.Kitchen), "and last", c.LastSeen.Format(time.Kitchen), "Mac:", mac)
+        first = fmt.Sprintf("MAC %s {\n\tFirst seen: %v\n\tLast seen:  %v\n", mac, c.FirstSeen, c.LastSeen)
+        if user, exists := allKnown[mac]; exists {
+            second = fmt.Sprintf("\tKnown as: %s\n\tDevice:   %s\n}\n", user.Name, user.Desc)
         } else {
-            fmt.Println("Saw", mac, "first", c.FirstSeen, "and last", c.LastSeen)
+            second = "}\n"
         }
+        fmt.Print(first + second)
 
     }
-    fmt.Println("Saw", count, "clients totally")
+    if count > 0 {
+        fmt.Println("Saw", count, "clients totally")
+    }
 }
 
 // returns true if run with root priviliges, else false.
