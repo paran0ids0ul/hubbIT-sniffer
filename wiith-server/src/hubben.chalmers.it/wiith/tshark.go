@@ -41,17 +41,18 @@ const (
     outputSeparator = "|"
 )
 
-type Filter int
+type FilterType int
 
+// Serves as a enumerator type for choosing the filter type.
 const (
-    DisplayFilter Filter = iota
+    DisplayFilter FilterType = iota
     CaptureFilter
 )
 
 var (
-    //tsharkArgs = []string{"-i", "mon0", "-l", "-n", "-T", "fields",
-    //    "-e", "wlan.sa", "-e", "frame.time_epoch", "-E", "separator=|"}
-    tsharkArgs  = []string{"-r", "/home/eda/small.pcap", "-n", "-T", "fields", "-e", "wlan.sa", "-e", "frame.time_epoch", "-E", "separator=|"}
+    tsharkArgs = []string{"-i", "mon0", "-l", "-n", "-T", "fields",
+        "-e", "wlan.sa", "-e", "frame.time_epoch", "-E", "separator=|"}
+    //tsharkArgs  = []string{"-r", "/home/eda/small.pcap", "-n", "-T", "fields", "-e", "wlan.sa", "-e", "frame.time_epoch", "-E", "separator=|"}
     dispArgs    = []string{"-2", "-R", dispFilter}
     captureArgs = []string{"-f", captureFilter}
     cmd         *exec.Cmd
@@ -63,8 +64,9 @@ type CapturedFrame struct {
     Timestamp time.Time
 }
 
-// Start the tshark process
-func StartTshark(filter Filter, capchan chan CapturedFrame) (err error) {
+// Start the tshark process. The captured mac-addresses will be
+// returned on the supplied channel.
+func StartTshark(filter FilterType, capchan chan CapturedFrame) (err error) {
     glog.Info("Starting tshark")
 
     var args []string
@@ -84,7 +86,7 @@ func StartTshark(filter Filter, capchan chan CapturedFrame) (err error) {
         return err
     }
 
-    go signalListen()
+    go listenCloseSignal()
     err = cmd.Start()
     if err != nil {
         glog.Error(err.Error())
@@ -114,7 +116,7 @@ func StopTshark() {
 // Process and parse the output from tshark
 // Assumes the format of: macaddress|epoch_timestamp
 // E.g. 38:aa:3c:3e:f2:da|1387487630.925985000
-// Returns the current visible clients (mac-addresses) on the supplied channel
+// Puts the current visible clients (mac-addresses) onto the supplied channel
 func process(output io.ReadCloser, capchan chan CapturedFrame) {
     var (
         scanner   = bufio.NewScanner(output)
@@ -161,7 +163,8 @@ func parseEpoch(epoch string) time.Time {
     return time.Unix(sec, nsec)
 }
 
-// Whether or not the supplied interface exist
+// Whether or not the supplied interface exist. Does not check whether
+// or not tshark can actually capture from this interface.
 func InterfaceExists(iface string) bool {
     if mon, _ := net.InterfaceByName(iface); mon != nil {
         return true
@@ -170,7 +173,7 @@ func InterfaceExists(iface string) bool {
 }
 
 // Listen and handle SIGINT and SIGTERM.
-func signalListen() {
+func listenCloseSignal() {
     ch := make(chan os.Signal)
     signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
     glog.Warning("Caught signal: ", <-ch)
