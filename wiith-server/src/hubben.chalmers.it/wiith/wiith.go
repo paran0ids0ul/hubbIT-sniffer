@@ -1,4 +1,4 @@
-/* This is the WhoIsInTheHubb server application written i Go.
+/* This is the WhoIsInTheHubb server application written in Go.
  * The server records nearby WiFi clients (using their MAC-addresses)
  * and stores statistics about them in a database.
  *
@@ -164,7 +164,7 @@ func printClients() {
     }
 }
 
-// returns true if run with root priviliges, else false.
+// returns true if run with root privileges, else false.
 func isRoot() bool {
     user, err := user.Current()
     if err != nil {

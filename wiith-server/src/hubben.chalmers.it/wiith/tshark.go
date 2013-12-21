@@ -50,7 +50,7 @@ const (
 )
 
 var (
-    tsharkArgs = []string{"-i", "mon0", "-l", "-n", "-T", "fields",
+    tsharkArgs = []string{"-i", *iface, "-l", "-n", "-T", "fields",
         "-e", "wlan.sa", "-e", "frame.time_epoch", "-E", "separator=|"}
     //tsharkArgs  = []string{"-r", "/home/eda/small.pcap", "-n", "-T", "fields", "-e", "wlan.sa", "-e", "frame.time_epoch", "-E", "separator=|"}
     dispArgs    = []string{"-2", "-R", dispFilter}
