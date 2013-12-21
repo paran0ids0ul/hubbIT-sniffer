@@ -35,9 +35,9 @@ import (
 
 const (
     tsharkCmd  = "tshark"
-    dispFilter = "(wlan.fc.type_subtype eq 4 || wlan.fc.type_subtype eq 2 || wlan.fc.type_subtype eq 0 || (wlan.fc.tods == 1 and wlan.fc.fromds == 0)) and wlan"
+    dispFilter = "(wlan.fc.type_subtype eq 4 || wlan.fc.type_subtype eq 2 || wlan.fc.type_subtype eq 0 || (wlan.fc.type_subtype eq 0x24 and wlan.fc.tods == 1 and wlan.fc.fromds == 0)) and wlan"
     // Capture filter is faster and less CPU-intensive (filters on the kernel level) but may not show all clients as good as the dispFilter
-    captureFilter   = "(subtype assocreq or subtype reassocreq or subtype probereq or subtype null)"
+    captureFilter   = "(subtype assocreq or subtype reassocreq or subtype probereq or (subtype null and dir tods))"
     outputSeparator = "|"
 )
 
@@ -66,7 +66,7 @@ type CapturedFrame struct {
 
 // Start the tshark process. The captured mac-addresses will be
 // returned on the supplied channel.
-func StartTshark(filter FilterType, capchan chan CapturedFrame) (err error) {
+func StartTshark(filter FilterType, capchan chan<- *CapturedFrame) (err error) {
     glog.Info("Starting tshark")
 
     var args []string
@@ -117,7 +117,7 @@ func StopTshark() {
 // Assumes the format of: macaddress|epoch_timestamp
 // E.g. 38:aa:3c:3e:f2:da|1387487630.925985000
 // Puts the current visible clients (mac-addresses) onto the supplied channel
-func process(output io.ReadCloser, capchan chan CapturedFrame) {
+func process(output io.ReadCloser, capchan chan<- *CapturedFrame) {
     var (
         scanner   = bufio.NewScanner(output)
         cur       MAC
@@ -129,7 +129,7 @@ func process(output io.ReadCloser, capchan chan CapturedFrame) {
         // when the message will be read from the channel.
         // (Also helps when reading pcap files)
         cur, timestamp = splitOutput(scanner.Text())
-        capchan <- CapturedFrame{cur, parseEpoch(timestamp)}
+        capchan <- &CapturedFrame{cur, parseEpoch(timestamp)}
     }
     if err := scanner.Err(); err != nil {
         glog.Warning("reading standard output:" + err.Error())
