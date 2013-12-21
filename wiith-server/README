@@ -1,13 +1,14 @@
 How to use:
-1. Install golang
+1. Install golang (apt-get, pacman, etc)
 2. $ source setup-env.sh
    (Let's fetch the dependencies)
-3. $ go get github.com/golang/glog
-4. Edit the code (optional)
-5. $ cd src/hubben.chalmers.it/wiith/
-6. $ go install
-7. $ wiith --help
-8. $ screen -S wiith -U wiith
-9. ...
-10. PROFIT
+3. $ go get github.com/golang/glog        Logging tool
+4. $ go get github.com/ogier/plag         POSIX style flags
+5. Edit the code (optional)
+6. $ cd src/hubben.chalmers.it/wiith/
+7. $ go install
+8. $ wiith --help
+9. $ screen -S wiith -U wiith
+10. ...
+11. PROFIT
 
