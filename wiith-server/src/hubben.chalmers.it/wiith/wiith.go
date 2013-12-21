@@ -51,6 +51,9 @@ import (
 type Client struct {
     FirstSeen time.Time
     LastSeen  time.Time
+    TimesSeen uint
+
+    // TODO: Maybe record all timestamps?
 }
 
 var currClients = make(map[MAC]*Client)
@@ -62,19 +65,24 @@ var (
     logThreshold = pflag.StringP("logthreshold", "t", "INFO", "Log events at or above this severity are logged to standard error as well as to files. Possible values: INFO, WARNING, ERROR and FATAL")
     logdir       = pflag.StringP("logpath", "p", "./logs", "The log files will be written in this directory/path")
 
-    flushInterval = pflag.Int64P("flushinterval", "f", 600, "The flush interval in seconds")
+    flushInterval = pflag.Int64P("flushinterval", "f", 283, "The flush interval in seconds")
     iface         = pflag.StringP("interface", "i", "mon0", "The capture interface to listen on")
 )
 
 func init() {
     pflag.Parse()
-}
 
-func main() {
     // glog Logging options
     flag.Set("logtostderr", strconv.FormatBool(*logToStderr))
     flag.Set("log_dir", *logdir)
     flag.Set("stderrthreshold", *logThreshold)
+
+    if isRoot() {
+        glog.Warning("Server run with root privileges!")
+    }
+}
+
+func main() {
     defer glog.Flush()
 
     if !InterfaceExists(*iface) {
@@ -82,14 +90,10 @@ func main() {
         os.Exit(1)
     }
 
-    if isRoot() {
-        glog.Warning("Server run with root privileges!")
-    }
-
     glog.Info("Starting whoIsInTheHubb server")
     defer glog.Info("Shutting down whoIsInTheHubb server...")
 
-    capchan := make(chan CapturedFrame, 10)
+    capchan := make(chan *CapturedFrame, 10)
     errchan := make(chan error)
 
     go func() {
@@ -106,13 +110,14 @@ func main() {
     }
 }
 
-func listenForClients(capchan chan CapturedFrame) {
+func listenForClients(capchan <-chan *CapturedFrame) {
     for frame := range capchan {
         if c, ok := currClients[frame.Mac]; !ok {
-            currClients[frame.Mac] = &Client{frame.Timestamp, frame.Timestamp}
+            currClients[frame.Mac] = &Client{frame.Timestamp, frame.Timestamp, 1}
         } else {
             // You seem familiar... Update LastSeen
             c.LastSeen = frame.Timestamp
+            c.TimesSeen += 1
         }
     }
 }
@@ -151,7 +156,7 @@ func printClients() {
     var count int
     for mac, c := range currClients {
         count++
-        fmt.Printf("MAC %s {\n\tFirst seen: %v\n\tLast seen:  %v\n}\n", mac, c.FirstSeen, c.LastSeen)
+        fmt.Printf("MAC %s {\n\tFirst seen: %v\n\tLast seen:  %v\n\tTimes seen: %d\n}\n", mac, c.FirstSeen, c.LastSeen, c.TimesSeen)
 
     }
     if count > 0 {
