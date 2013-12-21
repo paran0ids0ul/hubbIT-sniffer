@@ -2,13 +2,14 @@ How to use:
 1. Install golang (apt-get, pacman, etc)
 2. $ source setup-env.sh
    (Let's fetch the dependencies)
-3. $ go get github.com/golang/glog        Logging tool
-4. $ go get github.com/ogier/plag         POSIX style flags
-5. Edit the code (optional)
-6. $ cd src/hubben.chalmers.it/wiith/
-7. $ go install
-8. $ wiith --help
-9. $ screen -S wiith -U wiith
-10. ...
-11. PROFIT
+3. $ go get github.com/golang/glog         Logging tool
+4. $ go get github.com/ogier/plag          POSIX style flags
+5. $ go get github.com/go-sql-driver/mysql
+6. Edit the code (optional)
+7. $ cd src/hubben.chalmers.it/wiith/
+8. $ go install
+9. $ wiith --help
+10. $ screen -S wiith -U wiith
+11. ...
+12. PROFIT
 
