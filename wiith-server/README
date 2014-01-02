@@ -1,5 +1,5 @@
 How to use:
-1. Install golang (apt-get, pacman, etc)
+1. Install golang and tshark (apt-get, pacman, etc)
 2. $ source setup-env.sh
    (Let's fetch the dependencies)
 3. $ go get github.com/golang/glog         Logging tool
