@@ -1,8 +1,0 @@
-name: whoIsInTheHub
-description: A sample WebUI application
-dependencies:
-  browser: any
-  hipster_mvc: any
-  js: any
-  rikulo_ui: any
-  web_ui: any
