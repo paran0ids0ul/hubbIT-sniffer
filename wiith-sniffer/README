@@ -1,10 +1,13 @@
+Description:
+This is the sniffer application that collects visible mac-addresses and
+sends them to the backend for data processing.
+
 How to use:
 1. Install golang and tshark (apt-get, pacman, etc)
 2. $ source setup-env.sh
    (Let's fetch the dependencies)
 3. $ go get github.com/golang/glog         Logging tool
-4. $ go get github.com/ogier/plag          POSIX style flags
-5. $ go get github.com/go-sql-driver/mysql
+4. $ go get github.com/ogier/pflag          POSIX style flags
 6. Edit the code (optional)
 7. $ cd src/hubben.chalmers.it/wiith/
 8. $ go install

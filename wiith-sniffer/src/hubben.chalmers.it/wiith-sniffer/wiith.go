@@ -36,18 +36,6 @@ import (
     "time"
 )
 
-//func init() {
-//allKnown["b4:07:f9:f3:65:eb"] = User{"Malm", "Phone"}
-//allKnown["00:26:08:dd:22:6a"] = User{"Malm", "Computer"}
-//allKnown["c8:60:00:3a:53:f3"] = User{"Meddan", "Computer"}
-//allKnown["78:d6:f0:df:c1:47"] = User{"Meddan", "Phone"}
-//allKnown["20:64:32:5f:33:cc"] = User{"Eda", "Phone"}
-//allKnown["08:d4:2b:1a:7e:d4"] = User{"Eda", "Tablet"}
-//allKnown["c4:85:08:2c:00:fb"] = User{"Eda", "Computer"}
-//allKnown["98:fe:94:4b:d4:f0"] = User{"rekoil", "Computer"}
-//allKnown["1c:7b:21:57:4c:40"] = User{"rekoil", "Phone"}
-//}
-
 type Client struct {
     FirstSeen time.Time
     LastSeen  time.Time
