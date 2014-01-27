@@ -1,5 +1,6 @@
-/* Contains tshark related code. Starting tshark, parsing output etc.
- * Also defines the CapturedFrame and MAC types
+/* This is where the magic happens. This module is responsible for
+ * starting and parsing the output of tshark (the application that
+ * does the actual sniffing)
  *
  * Copyright (C) 2013 Emil 'Eda' Edholm (digIT13)
  *

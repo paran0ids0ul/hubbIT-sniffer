@@ -1,10 +1,18 @@
-/* This is the WhoIsInTheHubb server application written in Go.
- * The server records nearby WiFi clients (using their MAC-addresses)
- * and stores statistics about them in a database.
+/* This is the WhoIsInTheHubb sniffer application written in Go.
+ * The sniffer listens on nearby WiFi traffic and records the
+ * visible client MAC-addresses and sends them through a
+ * TCP-connection to the backend for data processing.
  *
- * Will print the current clients on SIGUSR2
- * Will flush and update database of the current
- * known clients on SIGUSR1
+ * The following signals are handled/recognized:
+ * SIGUSR1: Will ignore TCP connection delay and try to reconnect
+ *          immediately if the backend is unreachable for some reason.
+ *
+ * SIGUSR2: Will print the current hitcount. That is the total number
+ *          of MAC-addresses seen not excluding duplicates. This is
+ *          essentially the number of frames that passed the
+ *          capture/display filter.
+
+ * SIGTERM, SIGINT: Will shutdown the sniffer gracefully.
  *
  * Copyright (C) 2013 Emil 'Eda' Edholm (digIT13)
  *
@@ -33,18 +41,7 @@ import (
     "os/user"
     "strconv"
     "syscall"
-    "time"
 )
-
-type Client struct {
-    FirstSeen time.Time
-    LastSeen  time.Time
-    TimesSeen uint
-
-    // TODO: Maybe record all timestamps?
-}
-
-var currClients = make(map[MAC]*Client)
 
 // The command line flags available
 var (
@@ -56,6 +53,7 @@ var (
     flushInterval = pflag.Int64P("flushinterval", "f", 283, "The flush interval in seconds")
     iface         = pflag.StringP("interface", "i", "mon0", "The capture interface to listen on")
     pcap          = pflag.StringP("pcap", "p", "", "Use a pcap file instead of live capturing")
+    hitCount      uint64
 )
 
 func init() {
@@ -79,8 +77,10 @@ func main() {
         os.Exit(1)
     }
 
-    glog.Info("Starting whoIsInTheHubb server")
-    defer glog.Info("Shutting down whoIsInTheHubb server...")
+    // TODO: Init connection to backend first...
+
+    glog.Info("Starting whoIsInTheHubb sniffer")
+    defer glog.Info("Shutting down whoIsInTheHubb sniffer...")
 
     capchan := make(chan *CapturedFrame, 10)
     errchan := make(chan error)
@@ -90,33 +90,19 @@ func main() {
     }()
 
     go listenSIGUSR()
-    go flushTimer()
     go listenForClients(capchan)
     err := <-errchan // Block until exit...
     if err == nil {
         glog.Info("tshark exited successfully")
-        printClients()
+        printHitCount()
     }
 }
 
 func listenForClients(capchan <-chan *CapturedFrame) {
     for frame := range capchan {
-        if c, ok := currClients[frame.Mac]; !ok {
-            currClients[frame.Mac] = &Client{frame.Timestamp, frame.Timestamp, 1}
-        } else {
-            // You seem familiar... Update LastSeen
-            c.LastSeen = frame.Timestamp
-            c.TimesSeen += 1
-        }
-    }
-}
-
-// flush the clients after the user specified amount of seconds
-func flushTimer() {
-    duration := time.Duration(*flushInterval) * time.Second
-    for {
-        <-time.After(duration)
-        flushClients()
+        hitCount++
+        // TODO: Send through tcp-channel
+        // TODO: Maybe impose restrictions on how often "duplicates" are sent
     }
 }
 
@@ -132,25 +118,17 @@ func listenSIGUSR() {
 
         switch signal {
         case syscall.SIGUSR1:
-            flushClients()
+            // TODO: Reconnect to backend
             break
         case syscall.SIGUSR2:
-            printClients()
+            printHitCount()
             break
         }
     }
 }
 
-func printClients() {
-    var count int
-    for mac, c := range currClients {
-        count++
-        fmt.Printf("MAC %s {\n\tFirst seen: %v\n\tLast seen:  %v\n\tTimes seen: %d\n}\n", mac, c.FirstSeen, c.LastSeen, c.TimesSeen)
-
-    }
-    if count > 0 {
-        fmt.Println("Total:", count, "clients")
-    }
+func printHitCount() {
+    fmt.Println("Total hitcount:", hitCount)
 }
 
 // returns true if run with root privileges, else false.
@@ -158,24 +136,7 @@ func isRoot() bool {
     user, err := user.Current()
     if err != nil {
         glog.Error(err.Error())
-        return false
+        return true
     }
     return user.Username == "root"
-}
-
-// Flush means that the amount of seconds seen for each client/mac will be calculated
-// and stored in the database.
-func flushClients() {
-    glog.Info("Flushing current clients...")
-
-    var count uint
-
-    for mac, client := range currClients {
-        count++
-        // TODO Implement...
-        _ = mac
-        _ = client
-    }
-
-    glog.Info("Flush complete! ", count, " clients flushed.")
 }
