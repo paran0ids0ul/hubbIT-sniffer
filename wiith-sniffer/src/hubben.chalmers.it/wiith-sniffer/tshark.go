@@ -50,12 +50,12 @@ const (
 )
 
 var (
-    tsharkArgs = []string{"-i", *iface, "-p", "-l", "-n", "-T", "fields",
+    tsharkLiveArgs = []string{"-i", *iface, "-p", "-l", "-n", "-T", "fields",
         "-e", "wlan.sa", "-e", "frame.time_epoch", "-E", "separator=|"}
-    //tsharkArgs  = []string{"-r", "/home/eda/small.pcap", "-n", "-T", "fields", "-e", "wlan.sa", "-e", "frame.time_epoch", "-E", "separator=|"}
-    dispArgs    = []string{"-2", "-R", dispFilter}
-    captureArgs = []string{"-f", captureFilter}
-    cmd         *exec.Cmd
+    tsharkPcapArgs = []string{"-n", "-T", "fields", "-e", "wlan.sa", "-e", "frame.time_epoch", "-E", "separator=|"}
+    dispArgs       = []string{"-2", "-R", dispFilter}
+    captureArgs    = []string{"-f", captureFilter}
+    cmd            *exec.Cmd
 )
 
 type MAC string
@@ -69,8 +69,17 @@ type CapturedFrame struct {
 func StartTshark(filter FilterType, capchan chan<- *CapturedFrame) (err error) {
     glog.Info("Starting tshark")
 
+    // Decide whether to use live recording or a pcap file (debugging purposes)
+    var tsharkArgs []string
+    if len(*pcap) != 0 {
+        file := []string{"-r", *pcap}
+        tsharkArgs = append(file, tsharkPcapArgs...)
+    } else {
+        tsharkArgs = tsharkLiveArgs
+    }
+
     var args []string
-    if filter == DisplayFilter {
+    if filter == DisplayFilter || len(*pcap) != 0 {
         args = append(tsharkArgs, dispArgs...)
     } else {
         args = append(tsharkArgs, captureArgs...)

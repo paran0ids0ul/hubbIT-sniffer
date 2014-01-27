@@ -49,12 +49,13 @@ var currClients = make(map[MAC]*Client)
 // The command line flags available
 var (
     // Log related flags
-    logToStderr  = pflag.BoolP("logtostderr", "l", true, "log to stderr instead of to files")
+    logToStderr  = pflag.BoolP("logtostderr", "s", true, "log to stderr instead of to files")
     logThreshold = pflag.StringP("logthreshold", "t", "INFO", "Log events at or above this severity are logged to standard error as well as to files. Possible values: INFO, WARNING, ERROR and FATAL")
-    logdir       = pflag.StringP("logpath", "p", "./logs", "The log files will be written in this directory/path")
+    logdir       = pflag.StringP("logpath", "l", "./logs", "The log files will be written in this directory/path")
 
     flushInterval = pflag.Int64P("flushinterval", "f", 283, "The flush interval in seconds")
     iface         = pflag.StringP("interface", "i", "mon0", "The capture interface to listen on")
+    pcap          = pflag.StringP("pcap", "p", "", "Use a pcap file instead of live capturing")
 )
 
 func init() {
@@ -66,14 +67,14 @@ func init() {
     flag.Set("stderrthreshold", *logThreshold)
 
     if isRoot() {
-        glog.Warning("Server run with root privileges!")
+        glog.Warning("Server run with root privileges! This is uneccessary if tshark has been setup correctly")
     }
 }
 
 func main() {
     defer glog.Flush()
 
-    if !InterfaceExists(*iface) {
+    if !InterfaceExists(*iface) && len(*pcap) == 0 {
         glog.Error(*iface + " interface does not exist")
         os.Exit(1)
     }
