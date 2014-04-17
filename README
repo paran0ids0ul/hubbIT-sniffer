@@ -3,16 +3,16 @@ This is the sniffer application that collects visible mac-addresses and
 sends them to the backend for data processing.
 
 How to use:
-1. Install golang and tshark (apt-get, pacman, etc)
+1. Install golang and tshark/wireshark (apt-get, pacman, etc)
 2. $ source setup-env.sh
    (Let's fetch the dependencies)
-3. $ go get github.com/golang/glog         Logging tool
+3. $ go get github.com/golang/glog          Logging tool
 4. $ go get github.com/ogier/pflag          POSIX style flags
 6. Edit the code (optional)
-7. $ cd src/hubben.chalmers.it/wiith/
+7. $ cd src/github.com/digit-chalmers/hubbit-sniffer/
 8. $ go install
-9. $ wiith-sniffer --help
-10. $ screen -S wiith -U wiith
-11. ...
-12. PROFIT
+9. Start monitor mode on the wireless interface. (Requires aircrack-ng to be installed)
+   # airmon-ng start wlan0
+10. $ hubbit-sniffer --help
+11. $ screen -S hubbit-sniffer -U hubbit-sniffer
 
