@@ -32,18 +32,19 @@
 package main
 
 import (
+    "encoding/json"
     "flag"
     "fmt"
     "github.com/golang/glog"
     "github.com/ogier/pflag"
+    "io/ioutil"
+    "net/http"
     "os"
     "os/signal"
     "os/user"
     "strconv"
+    "strings"
     "syscall"
-    "encoding/json"
-    "net/http"
-    "net/url"
 )
 
 // The command line flags available
@@ -56,7 +57,7 @@ var (
     flushInterval = pflag.Int64P("flushinterval", "f", 283, "The flush interval in seconds")
     iface         = pflag.StringP("interface", "i", "mon0", "The capture interface to listen on")
     pcap          = pflag.StringP("pcap", "p", "", "Use a pcap file instead of live capturing")
-    server          = pflag.StringP("server", "s", "", "Server to post to")
+    server        = pflag.StringP("server", "s", "", "Server to post to")
     hitCount      uint64
 )
 
@@ -105,25 +106,43 @@ func main() {
 func listenForClients(capchan <-chan *CapturedFrame) {
     for frame := range capchan {
         hitCount++
-        b, err := json.Marshal(frame)
-         if err != nil {
-            fmt.Println("error:", err)
-            glog.Error("error: ",err)
+        jsonByteBuffer, err := json.Marshal(frame)
+        if err != nil {
+            glog.Error("Json encoding error:", err)
         }
 
-        hej := string(b)
-        fmt.Println("msg:", hej)
-        resp, err := http.Get(*server+"?json="+url.QueryEscape(hej))
-       
-       //fmt.Println("framen:",resp)
+        jsonMsg := string(jsonByteBuffer)
+        fmt.Println("Json:", jsonMsg)
+
+        client := &http.Client{}
+        request, err := http.NewRequest("PUT", *server, strings.NewReader(jsonMsg))
+        request.ContentLength = int64(len(jsonMsg))
+        //resp, err := http.Get(*server + "?json=" + url.QueryEscape(hej))
         if err != nil {
-             fmt.Println("error:", resp)
-            fmt.Println("error:", err)
-            glog.Error("error: ", err)
-        }else{
-            defer resp.Body.Close()
+            glog.Error("PUT request error: ", err)
+            continue
         }
-        // TODO: Send through tcp-channel
+
+        response, err := client.Do(request)
+        if err != nil {
+            glog.Error("PUT response error: ", err)
+            continue
+        }
+        defer response.Body.Close()
+
+        contents, err := ioutil.ReadAll(response.Body)
+        if err != nil {
+            glog.Error("Error reading response:", err)
+            continue
+        }
+        fmt.Println("The calculated length is:", len(string(contents)), "for the url:", server)
+        fmt.Println("   ", response.StatusCode)
+        hdr := response.Header
+        for key, value := range hdr {
+            fmt.Println("   ", key, ":", value)
+        }
+        fmt.Println(contents)
+
         // TODO: Maybe impose restrictions on how often "duplicates" are sent
     }
 }
