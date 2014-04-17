@@ -41,18 +41,22 @@ import (
     "os/user"
     "strconv"
     "syscall"
+    "encoding/json"
+    "net/http"
+    "net/url"
 )
 
 // The command line flags available
 var (
     // Log related flags
-    logToStderr  = pflag.BoolP("logtostderr", "s", true, "log to stderr instead of to files")
+    logToStderr  = pflag.BoolP("logtostderr", "e", true, "log to stderr instead of to files")
     logThreshold = pflag.StringP("logthreshold", "t", "INFO", "Log events at or above this severity are logged to standard error as well as to files. Possible values: INFO, WARNING, ERROR and FATAL")
     logdir       = pflag.StringP("logpath", "l", "./logs", "The log files will be written in this directory/path")
 
     flushInterval = pflag.Int64P("flushinterval", "f", 283, "The flush interval in seconds")
     iface         = pflag.StringP("interface", "i", "mon0", "The capture interface to listen on")
     pcap          = pflag.StringP("pcap", "p", "", "Use a pcap file instead of live capturing")
+    server          = pflag.StringP("server", "s", "", "Server to post to")
     hitCount      uint64
 )
 
@@ -101,6 +105,24 @@ func main() {
 func listenForClients(capchan <-chan *CapturedFrame) {
     for frame := range capchan {
         hitCount++
+        b, err := json.Marshal(frame)
+         if err != nil {
+            fmt.Println("error:", err)
+            glog.Error("error: ",err)
+        }
+
+        hej := string(b)
+        fmt.Println("msg:", hej)
+        resp, err := http.Get(*server+"?json="+url.QueryEscape(hej))
+       
+       //fmt.Println("framen:",resp)
+        if err != nil {
+             fmt.Println("error:", resp)
+            fmt.Println("error:", err)
+            glog.Error("error: ", err)
+        }else{
+            defer resp.Body.Close()
+        }
         // TODO: Send through tcp-channel
         // TODO: Maybe impose restrictions on how often "duplicates" are sent
     }

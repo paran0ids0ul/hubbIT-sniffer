@@ -11,7 +11,7 @@ How to use:
 6. Edit the code (optional)
 7. $ cd src/hubben.chalmers.it/wiith/
 8. $ go install
-9. $ wiith --help
+9. $ wiith-sniffer --help
 10. $ screen -S wiith -U wiith
 11. ...
 12. PROFIT
