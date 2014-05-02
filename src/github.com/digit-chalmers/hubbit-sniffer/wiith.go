@@ -51,13 +51,14 @@ import (
 var (
     // Log related flags
     logToStderr  = pflag.BoolP("logtostderr", "e", true, "log to stderr instead of to files")
-    logThreshold = pflag.StringP("logthreshold", "t", "INFO", "Log events at or above this severity are logged to standard error as well as to files. Possible values: INFO, WARNING, ERROR and FATAL")
+    logThreshold = pflag.StringP("logthreshold", "o", "INFO", "Log events at or above this severity are logged to standard error as well as to files. Possible values: INFO, WARNING, ERROR and FATAL")
     logdir       = pflag.StringP("logpath", "l", "./logs", "The log files will be written in this directory/path")
 
-    flushInterval = pflag.Int64P("flushinterval", "f", 283, "The flush interval in seconds")
+    flushInterval = pflag.Int64P("flushinterval", "f", 59, "The interval between the PUT of batches of mac-addresses")
     iface         = pflag.StringP("interface", "i", "mon0", "The capture interface to listen on")
     pcap          = pflag.StringP("pcap", "p", "", "Use a pcap file instead of live capturing")
-    server        = pflag.StringP("server", "s", "", "Server to post to")
+    server        = pflag.StringP("server", "s", "", "Server to PUT macs to")
+    authToken     = pflag.StringP("token", "t", "", "API-token. (Required)")
     hitCount      uint64
 )
 
@@ -71,6 +72,14 @@ func init() {
 
     if isRoot() {
         glog.Warning("Server run with root privileges! This is uneccessary if tshark has been setup correctly")
+    }
+
+    if len(*server) == 0 {
+        glog.Warning("No server supplied...")
+    }
+
+    if len(*authToken) == 0 {
+        glog.Warning("No API-token supplied. Will probably fail to PUT mac-addresses to the backend.")
     }
 }
 
@@ -117,7 +126,10 @@ func listenForClients(capchan <-chan *CapturedFrame) {
         client := &http.Client{}
         request, err := http.NewRequest("PUT", *server, strings.NewReader(jsonMsg))
         request.ContentLength = int64(len(jsonMsg))
-        //resp, err := http.Get(*server + "?json=" + url.QueryEscape(hej))
+        request.Header.Set("Content-Type", "application/json")
+
+        token := fmt.Sprintf("Token token=\"%v\"", *authToken)
+        request.Header.Set("Authorization", token)
         if err != nil {
             glog.Error("PUT request error: ", err)
             continue
