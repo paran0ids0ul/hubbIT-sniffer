@@ -57,7 +57,7 @@ var (
     flushInterval = pflag.Int64P("flushinterval", "f", 59, "The interval between the PUT of batches of mac-addresses")
     iface         = pflag.StringP("interface", "i", "mon0", "The capture interface to listen on")
     pcap          = pflag.StringP("pcap", "p", "", "Use a pcap file instead of live capturing")
-    server        = pflag.StringP("server", "s", "", "Server to PUT macs to")
+    server        = pflag.StringP("server", "s", "http://localhost:3000/sessions.json", "Server to PUT macs to")
     authToken     = pflag.StringP("token", "t", "", "API-token. (Required)")
     hitCount      uint64
 )
