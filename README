@@ -2,6 +2,8 @@ Description:
 This is the sniffer application that collects visible mac-addresses and
 sends them to the backend for data processing.
 
+Is used together with https://github.com/cthit/HueIT-Rails
+
 How to use:
 1. Install golang and tshark/wireshark (apt-get, pacman, etc)
 2. $ source setup-env.sh
