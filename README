@@ -13,6 +13,7 @@ How to use:
 8. $ go install
 9. Start monitor mode on the wireless interface. (Requires aircrack-ng to be installed)
    # airmon-ng start wlan0
-10. $ hubbit-sniffer --help
-11. $ screen -S hubbit-sniffer -U hubbit-sniffer
+10. Set dumpcap to run as root (to allow monitoring without sudo) sudo chmod 4755 /usr/bin/dumpcap
+11. $ hubbit-sniffer --help
+12. $ screen -S hubbit-sniffer -U hubbit-sniffer
 
