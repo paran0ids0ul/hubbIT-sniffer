@@ -15,5 +15,5 @@ pubspec.lock
 
 
 src/*
-src/github.com/digit-chalmers/hubbit-sniffer/logs/*
-!./src/github.com/digit-chalmers/hubbit-sniffer/
+src/github.com/cthit/hubbit-sniffer/logs/*
+!./src/github.com/cthit/hubbit-sniffer/
