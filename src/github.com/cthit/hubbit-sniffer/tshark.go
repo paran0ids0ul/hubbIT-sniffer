@@ -51,11 +51,10 @@ const (
 )
 
 var (
-    tsharkLiveArgs = []string{"-i", *iface, "-p", "-l", "-n", "-T", "fields",
-        "-e", "wlan.sa", "-e", "frame.time_epoch", "-E", "separator=|"}
-    tsharkPcapArgs = []string{"-n", "-T", "fields", "-e", "wlan.sa", "-e", "frame.time_epoch", "-E", "separator=|"}
-    dispArgs       = []string{"-2", "-R", dispFilter}
-    captureArgs    = []string{"-f", captureFilter}
+    tsharkLiveArgs []string
+    tsharkPcapArgs []string
+    dispArgs       []string
+    captureArgs    []string
     cmd            *exec.Cmd
 )
 
@@ -65,10 +64,21 @@ type CapturedFrame struct {
     Timestamp time.Time
 }
 
+// This is needed to defer init of variables until after init of
+// command line flags
+func ConstructArguments() {
+    tsharkLiveArgs = []string{"-i", *iface, "-p", "-l", "-n", "-T", "fields",
+        "-e", "wlan.sa", "-e", "frame.time_epoch", "-E", "separator=|"}
+    tsharkPcapArgs = []string{"-n", "-T", "fields", "-e", "wlan.sa", "-e", "frame.time_epoch", "-E", "separator=|"}
+    dispArgs       = []string{"-2", "-R", dispFilter}
+    captureArgs    = []string{"-f", captureFilter}
+}
+
 // Start the tshark process. The captured mac-addresses will be
 // returned on the supplied channel.
 func StartTshark(filter FilterType, capchan chan<- *CapturedFrame) (err error) {
     glog.Info("Starting tshark")
+    ConstructArguments()
 
     // Decide whether to use live recording or a pcap file (debugging purposes)
     var tsharkArgs []string

@@ -1,4 +1,4 @@
-/* This is the WhoIsInTheHubb sniffer application written in Go.
+/* This is the hubbIT-sniffer application written in Go.
  * The sniffer listens on nearby WiFi traffic and records the
  * visible client MAC-addresses and sends them through a
  * TCP-connection to the backend for data processing.
@@ -59,6 +59,7 @@ var (
     pcap          = pflag.StringP("pcap", "p", "", "Use a pcap file instead of live capturing")
     server        = pflag.StringP("server", "s", "http://localhost:3000/sessions.json", "Server to PUT macs to")
     authToken     = pflag.StringP("token", "t", "", "API-token. (Required)")
+    printResponse = pflag.BoolP("printresponse", "r", false, "Print response from backend")
     hitCount      uint64
 )
 
@@ -147,13 +148,15 @@ func listenForClients(capchan <-chan *CapturedFrame) {
             glog.Error("Error reading response:", err)
             continue
         }
-        fmt.Println("The calculated length is:", len(string(contents)), "for the url:", server)
-        fmt.Println("   ", response.StatusCode)
-        hdr := response.Header
-        for key, value := range hdr {
-            fmt.Println("   ", key, ":", value)
+        if *printResponse {
+            fmt.Println("The calculated length is:", len(string(contents)), "for the url:", server)
+            fmt.Println("   ", response.StatusCode)
+            hdr := response.Header
+            for key, value := range hdr {
+                fmt.Println("   ", key, ":", value)
+            }
+            fmt.Println(contents)
         }
-        fmt.Println(contents)
 
         // TODO: Maybe impose restrictions on how often "duplicates" are sent
     }
