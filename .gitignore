@@ -17,3 +17,6 @@ pubspec.lock
 src/*
 src/github.com/digit-chalmers/hubbit-sniffer/logs/*
 !./src/github.com/digit-chalmers/hubbit-sniffer/
+
+
+__pycache__

@@ -1,21 +1,9 @@
-Description:
+# HubbIT-Sniffer
+
+## Description:
 This is the sniffer application that collects visible mac-addresses and
 sends them to the backend for data processing.
 
-Is used together with https://github.com/cthit/HueIT-Rails
+Is used together with https://github.com/cthit/hubbIT/
 
-How to use:
-1. Install golang and tshark/wireshark (apt-get, pacman, etc)
-2. $ source setup-env.sh
-   (Let's fetch the dependencies)
-3. $ go get github.com/golang/glog          Logging tool
-4. $ go get github.com/ogier/pflag          POSIX style flags
-6. Edit the code (optional)
-7. $ cd src/github.com/digit-chalmers/hubbit-sniffer/
-8. $ go install
-9. Start monitor mode on the wireless interface. (Requires aircrack-ng to be installed)
-   # airmon-ng start wlan0
-10. Set dumpcap to run as root (to allow monitoring without sudo) sudo chmod 4755 /usr/bin/dumpcap
-11. $ hubbit-sniffer --help
-12. $ screen -S hubbit-sniffer -U hubbit-sniffer
-
+## How to use:
