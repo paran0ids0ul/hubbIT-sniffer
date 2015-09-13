@@ -84,7 +84,7 @@ class Main:
         r = requests.put(self._url,
                          headers={"Authorization":"Token token=" + self._api},
                          json=payload)
-        return r.status_code
+        return r.status_code, r.reason
 
 
     def run(self):
@@ -98,8 +98,8 @@ class Main:
             while self._keep_capturing:
                 time.sleep(self._timeout)
                 macs = self._storage.list_and_clear()
-                status_code = self.PUT_to_server({"macs":macs})
-                print(time.strftime("%F %T") + " - " + str(len(macs)) + " -> " + self._url  + " <-- " + str(status_code))
+                status_code, reason = self.PUT_to_server({"macs":macs})
+                print(time.strftime("%F %T") + " - " + str(len(macs)) + " -> " + self._url  + " <-- " + str(status_code) + " " + reason)
             self._storage.clear()
             self._cap.join()
 
