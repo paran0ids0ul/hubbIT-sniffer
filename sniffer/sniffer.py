@@ -7,7 +7,6 @@ import subprocess
 import threading
 import time
 import signal
-import re
 
 class MacStorage():
     def __init__(self):
@@ -83,6 +82,7 @@ class Main:
             self._cap.start()
             while self._keep_capturing:
                 time.sleep(5)
+                # Instead of print, PUT that shiet to the server
                 print(self._storage.list_and_clear())
             self._storage.clear()
             self._cap.join()
