@@ -20,3 +20,5 @@ src/github.com/digit-chalmers/hubbit-sniffer/logs/*
 
 
 __pycache__
+*.pyc
+blacklist.txt
