@@ -35,13 +35,14 @@ class MacStorage():
         return maclist
 
 class Capture(threading.Thread):
-    def __init__(self, storage, iface):
+    def __init__(self, storage, iface, blacklist_path):
         self._storage = storage
         self._iface = iface
+        self._blacklist_path = blacklist_path
         threading.Thread.__init__(self)
 
     def _build_command(self):
-        filter = blacklist.Blacklist().create_filter()
+        filter = blacklist.Blacklist(self._blacklist_path).create_filter()
         return ['tshark', '-i', self._iface , '-p', '-l', '-n', '-T', 'fields', '-e', 'wlan.sa', filter]
 
     def run(self):
@@ -56,13 +57,14 @@ class Capture(threading.Thread):
 
 
 class Main:
-    def __init__(self, api=None, url=None, interface=None):
+    def __init__(self, api=None, url=None, interface=None, blacklist_path=None):
         self._storage = MacStorage()
         self._keep_capturing = True
         self._sigint = False
         self._url = url
         self._api = api
         self._iface = interface
+        self._blacklist_path = blacklist_path
 
     def handle_sigusr1(self, signal, frame):
         print("Caught SIGUSR1, reloading blacklist")
@@ -84,7 +86,7 @@ class Main:
 
         while not self._sigint:
             self._keep_capturing = True
-            self._cap = Capture(self._storage, self._iface)
+            self._cap = Capture(self._storage, self._iface, self._blacklist_path)
             self._cap.start()
             while self._keep_capturing:
                 time.sleep(5)
@@ -102,6 +104,7 @@ def main():
     parser.add_argument('-a', '--api', default="PLZ_LET_ME_IN", help="The API-key to send to the server")
     parser.add_argument('-u', '--url', default="https://hubbit.chalmers.it/sessions.json", help="Full PUT address to the server")
     parser.add_argument('-i', '--interface', metavar="IFACE", default="hubbit", help="The monitor interface. Note: must be in promiscious mode")
+    parser.add_argument('-b', '--blacklist', metavar="PATH", default="blacklist.txt", help="The path to the blacklist file.")
 
     args = parser.parse_args()
 
@@ -110,7 +113,7 @@ def main():
         print('Fix the above before continuing')
         exit(1)
 
-    m = Main(api=args.api, url=args.url, interface=args.interface)
+    m = Main(api=args.api, url=args.url, interface=args.interface, blacklist_path=args.blacklist)
     m.run()
 
 if __name__ == '__main__':
