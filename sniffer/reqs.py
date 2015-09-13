@@ -7,7 +7,8 @@ class Requirements():
     def check(self):
         have_reqs = True
         if not self._iface_exists():
-            print("Network interface \'" + self.iface + "\' doesn't exist. Run scripts/setup-mon-iface.sh as root")
+            print("Network interface \'" + self.iface +
+                  "\' doesn't exist. Run scripts/setup-mon-iface.sh as root")
             have_reqs = False
         return have_reqs
 
@@ -17,4 +18,3 @@ class Requirements():
             content = f.read()
 
         return self.iface in content
-

@@ -1,14 +1,17 @@
 from enum import Enum
 
+
 class Filter(Enum):
     BPF = 1
     Capture = 2
     Display = 3
 
+
 class Blacklist:
     def __init__(self, blacklist_path=None):
         self.blacklist_file = blacklist_path
-        self.default_blacklist = ["00:1f:9d:b6:e0:00", "00:00:00:00:00:00", "ff:ff:ff:ff:ff:ff", "2c:54:2d:3a:5f:60"]
+        self.default_blacklist = ["00:1f:9d:b6:e0:00", "00:00:00:00:00:00",
+                                  "ff:ff:ff:ff:ff:ff", "2c:54:2d:3a:5f:60"]
 
     def _read_blacklist(self):
         content = None
@@ -18,7 +21,6 @@ class Blacklist:
         except IOError:
             return []
         return [x.strip().lower() for x in content]
-
 
     def create_filter(self, type=Filter.Capture):
         macs = self._read_blacklist()
@@ -30,5 +32,3 @@ class Blacklist:
         if len(macs) > 0:
             return filter + " " + (" and " + filter + " ").join(macs)
         return ""
-
-
