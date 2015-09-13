@@ -7,6 +7,8 @@ import subprocess
 import threading
 import time
 import signal
+import requests
+import argparse
 
 class MacStorage():
     def __init__(self):
@@ -33,13 +35,14 @@ class MacStorage():
         return maclist
 
 class Capture(threading.Thread):
-    def __init__(self, storage):
+    def __init__(self, storage, iface):
         self._storage = storage
+        self._iface = iface
         threading.Thread.__init__(self)
 
     def _build_command(self):
         filter = blacklist.Blacklist().create_filter()
-        return ['tshark', '-i' 'hubbit', '-p', '-l', '-n', '-T', 'fields', '-e', 'wlan.sa', filter]
+        return ['tshark', '-i', self._iface , '-p', '-l', '-n', '-T', 'fields', '-e', 'wlan.sa', filter]
 
     def run(self):
         self._tshark_proc = subprocess.Popen(self._build_command(), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
@@ -53,10 +56,13 @@ class Capture(threading.Thread):
 
 
 class Main:
-    def __init__(self):
+    def __init__(self, api=None, url=None, interface=None):
         self._storage = MacStorage()
         self._keep_capturing = True
         self._sigint = False
+        self._url = url
+        self._api = api
+        self._iface = interface
 
     def handle_sigusr1(self, signal, frame):
         print("Caught SIGUSR1, reloading blacklist")
@@ -78,21 +84,33 @@ class Main:
 
         while not self._sigint:
             self._keep_capturing = True
-            self._cap = Capture(self._storage)
+            self._cap = Capture(self._storage, self._iface)
             self._cap.start()
             while self._keep_capturing:
                 time.sleep(5)
-                # Instead of print, PUT that shiet to the server
-                print(self._storage.list_and_clear())
+                macs = self._storage.list_and_clear()
+                pload = {"macs":macs}
+                r = requests.put(self._url,
+                                 headers={"Authorization":"Token token=" + self._api},
+                                 json=pload)
+                print(time.strftime("%F %T") + " - " + str(len(macs)) + " -> " + self._url  + " <-- " + str(r.status_code))
             self._storage.clear()
             self._cap.join()
 
 def main():
-    req = reqs.Requirements()
+    parser = argparse.ArgumentParser(description="Mac sniffer")
+    parser.add_argument('-a', '--api', default="PLZ_LET_ME_IN", help="The API-key to send to the server")
+    parser.add_argument('-u', '--url', default="https://hubbit.chalmers.it/sessions.json", help="Full PUT address to the server")
+    parser.add_argument('-i', '--interface', metavar="IFACE", default="hubbit", help="The monitor interface. Note: must be in promiscious mode")
+
+    args = parser.parse_args()
+
+    req = reqs.Requirements(iface=args.interface)
     if not req.check():
         print('Fix the above before continuing')
         exit(1)
-    m = Main()
+
+    m = Main(api=args.api, url=args.url, interface=args.interface)
     m.run()
 
 if __name__ == '__main__':
