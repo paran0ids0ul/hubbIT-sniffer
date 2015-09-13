@@ -57,7 +57,7 @@ class Capture(threading.Thread):
 
 
 class Main:
-    def __init__(self, api=None, url=None, interface=None, blacklist_path=None):
+    def __init__(self, api=None, url=None, interface=None, blacklist_path=None, timeout=5):
         self._storage = MacStorage()
         self._keep_capturing = True
         self._sigint = False
@@ -65,6 +65,7 @@ class Main:
         self._api = api
         self._iface = interface
         self._blacklist_path = blacklist_path
+        self._timeout = timeout
 
     def handle_sigusr1(self, signal, frame):
         print("Caught SIGUSR1, reloading blacklist")
@@ -79,6 +80,12 @@ class Main:
         self._keep_capturing = False
         self._sigint = True
 
+    def PUT_to_server(self, payload):
+        r = requests.put(self._url,
+                         headers={"Authorization":"Token token=" + self._api},
+                         json=payload)
+        return r.status_code
+
 
     def run(self):
         signal.signal(signal.SIGUSR1, self.handle_sigusr1)
@@ -89,13 +96,10 @@ class Main:
             self._cap = Capture(self._storage, self._iface, self._blacklist_path)
             self._cap.start()
             while self._keep_capturing:
-                time.sleep(5)
+                time.sleep(self._timeout)
                 macs = self._storage.list_and_clear()
-                pload = {"macs":macs}
-                r = requests.put(self._url,
-                                 headers={"Authorization":"Token token=" + self._api},
-                                 json=pload)
-                print(time.strftime("%F %T") + " - " + str(len(macs)) + " -> " + self._url  + " <-- " + str(r.status_code))
+                status_code = self.PUT_to_server({"macs":macs})
+                print(time.strftime("%F %T") + " - " + str(len(macs)) + " -> " + self._url  + " <-- " + str(status_code))
             self._storage.clear()
             self._cap.join()
 
@@ -105,6 +109,7 @@ def main():
     parser.add_argument('-u', '--url', default="https://hubbit.chalmers.it/sessions.json", help="Full PUT address to the server")
     parser.add_argument('-i', '--interface', metavar="IFACE", default="hubbit", help="The monitor interface. Note: must be in promiscious mode")
     parser.add_argument('-b', '--blacklist', metavar="PATH", default="blacklist.txt", help="The path to the blacklist file.")
+    parser.add_argument('-t', '--timeout', metavar="SECONDS", type=int, default=5, help="Time in seconds between each batch upload of macs to the server")
 
     args = parser.parse_args()
 
@@ -113,7 +118,8 @@ def main():
         print('Fix the above before continuing')
         exit(1)
 
-    m = Main(api=args.api, url=args.url, interface=args.interface, blacklist_path=args.blacklist)
+    m = Main(api=args.api, url=args.url, interface=args.interface,
+             blacklist_path=args.blacklist, timeout=args.timeout)
     m.run()
 
 if __name__ == '__main__':
