@@ -29,6 +29,8 @@ class MacStorage():
     def list_and_clear(self):
         self._lock.acquire()
         maclist = [(k,v) for k,v in self._macs.items()]
+        if not maclist:
+            maclist.append("")
         self._macs.clear()
         self._lock.release()
 
