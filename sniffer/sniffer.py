@@ -62,7 +62,7 @@ class Main:
     def __init__(self, api=None, url=None, interface=None, blacklist_path=None, timeout=5):
         self._storage = MacStorage()
         self._keep_capturing = True
-        self._sigint = False
+        self._interrupted = False
         self._url = url
         self._api = api
         self._iface = interface
@@ -80,7 +80,7 @@ class Main:
         print("Caught SIGINT")
         self._cap.stop()
         self._keep_capturing = False
-        self._sigint = True
+        self._interrupted = True
 
     def PUT_to_server(self, payload):
         r = requests.put(self._url,
@@ -93,7 +93,7 @@ class Main:
         signal.signal(signal.SIGUSR1, self.handle_sigusr1)
         signal.signal(signal.SIGINT, self.handle_sigint)
 
-        while not self._sigint:
+        while not self._interrupted:
             self._keep_capturing = True
             self._cap = Capture(self._storage, self._iface, self._blacklist_path)
             self._cap.start()
