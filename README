@@ -1,9 +1,0 @@
-# HubbIT-Sniffer
-
-## Description:
-This is the sniffer application that collects visible mac-addresses and
-sends them to the backend for data processing.
-
-Is used together with https://github.com/cthit/hubbIT/
-
-## How to use:
