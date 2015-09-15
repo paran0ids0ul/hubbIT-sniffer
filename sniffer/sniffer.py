@@ -29,8 +29,6 @@ class MacStorage():
     def list_and_clear(self):
         self._lock.acquire()
         maclist = [(k, v) for k, v in self._macs.items()]
-        if not maclist:
-            maclist.append("")
         self._macs.clear()
         self._lock.release()
 
@@ -105,15 +103,16 @@ class Main:
             while self._keep_capturing:
                 time.sleep(self._timeout)
                 macs = self._storage.list_and_clear()
-                status_code, reason = self.PUT_to_server({"macs": macs})
+                if len(macs) > 0:
+                    status_code, reason = self.PUT_to_server({"macs": macs})
 
-                # green, else red
-                color = '\033[32m' if status_code == 204 else '\033[91m'
-                reset = '\033[0m'  # reset color
-                print("[{}] {:2} -> {} -> {}{} {}{}"
-                      .format(time.strftime("%F %T"),
-                              len(macs), self._url, color, status_code,
-                              reason, reset))
+                    # green, else red
+                    color = '\033[32m' if status_code == 204 else '\033[91m'
+                    reset = '\033[0m'  # reset color
+                    print("[{}] {:2} -> {} -> {}{} {}{}"
+                          .format(time.strftime("%F %T"),
+                                  len(macs), self._url, color, status_code,
+                                  reason, reset))
             self._storage.clear()
             self._cap.join()
 
