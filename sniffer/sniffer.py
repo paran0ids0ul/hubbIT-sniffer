@@ -106,9 +106,14 @@ class Main:
                 time.sleep(self._timeout)
                 macs = self._storage.list_and_clear()
                 status_code, reason = self.PUT_to_server({"macs": macs})
-                print("{} - {} -> {} <-- {} {}"
+
+                # green, else red
+                color = '\033[32m' if status_code == 204 else '\033[91m'
+                reset = '\033[0m'  # reset color
+                print("[{}] {:2} -> {} -> {}{} {}{}"
                       .format(time.strftime("%F %T"),
-                              len(macs), self._url, status_code, reason))
+                              len(macs), self._url, color, status_code,
+                              reason, reset))
             self._storage.clear()
             self._cap.join()
 
