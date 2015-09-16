@@ -8,6 +8,7 @@ import time
 import signal
 import requests
 import argparse
+from sys import stderr
 
 
 class MacStorage():
@@ -86,9 +87,18 @@ class Main:
         self._interrupted = True
 
     def PUT_to_server(self, payload):
-        r = requests.put(self._url,
-                         headers={"Authorization": "Token token=" + self._api},
-                         json=payload)
+        try:
+            r = requests.put(self._url,
+                             headers={"Authorization": "Token token=" +
+                                      self._api},
+                             json=payload)
+        except requests.exceptions.ConnectionError as ce:
+            print("Connection error: " + str(ce), file=stderr)
+            return -1, "Connection error"
+        except requests.exceptions.Timeout as t:
+            print("Timeout: " + str(t), file=stderr)
+            return -2, "Timeout"
+
         return r.status_code, r.reason
 
     def run(self):
