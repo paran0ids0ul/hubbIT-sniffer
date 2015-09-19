@@ -88,16 +88,14 @@ class Main:
 
     def PUT_to_server(self, payload):
         try:
-            r = requests.put(self._url,
-                             headers={"Authorization": "Token token=" +
-                                      self._api},
-                             json=payload)
-        except requests.exceptions.ConnectionError as ce:
-            print("Connection error: " + str(ce), file=stderr)
-            return -1, "Connection error"
+            r = requests.put(self._url, headers={"Authorization": "Token token=" +
+                                                 self._api}, timeout=5, json=payload)
         except requests.exceptions.Timeout as t:
             print("Timeout: " + str(t), file=stderr)
             return -2, "Timeout"
+        except requests.exceptions.ConnectionError as ce:
+            print("Connection error: " + str(ce), file=stderr)
+            return -1, "Connection error"
 
         return r.status_code, r.reason
 
